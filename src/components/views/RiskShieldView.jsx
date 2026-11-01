@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -28,17 +28,30 @@ export default function RiskShieldView({
 
   const risks = event.risks || [];
 
+  // ESC key listener for modal
+  useEffect(() => {
+    if (!showAddModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowAddModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddModal]);
+
   const handleAddRisk = (e) => {
     e.preventDefault();
-    if (!newRisk) return;
+    const cleanRisk = newRisk.trim();
+    if (!cleanRisk) return;
 
     const item = {
       id: 'risk-' + Date.now(),
-      risk: newRisk,
-      likelihood: newLikelihood,
-      impact: newImpact,
-      preventative: newPreventative,
-      planB: newPlanB
+      risk: cleanRisk.slice(0, 150),
+      likelihood: ['High', 'Medium', 'Low'].includes(newLikelihood) ? newLikelihood : 'Medium',
+      impact: ['High', 'Medium', 'Low'].includes(newImpact) ? newImpact : 'Medium',
+      preventative: newPreventative.trim().slice(0, 300),
+      planB: newPlanB.trim().slice(0, 300)
     };
 
     onUpdateRisks([...risks, item]);
@@ -111,6 +124,7 @@ export default function RiskShieldView({
                   onClick={() => handleDeleteRisk(item.id)}
                   className="text-soiree-muted/40 hover:text-soiree-rose p-1 transition-colors"
                   title="Remove risk item"
+                  aria-label="Remove risk item"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

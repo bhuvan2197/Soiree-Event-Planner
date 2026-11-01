@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   UserPlus,
@@ -11,6 +11,7 @@ import {
   Filter
 } from 'lucide-react';
 import Badge from '../common/Badge';
+import { calculateCateringMetrics, sanitizeNumber } from '../../utils/eventValidation';
 
 export default function GuestsView({ event, onUpdateGuests }) {
   const [showAddGuest, setShowAddGuest] = useState(false);
@@ -26,31 +27,26 @@ export default function GuestsView({ event, onUpdateGuests }) {
   const guests = event.guests || [];
 
   // Headcount metrics
-  const totalInvitedGuests = guests.reduce((acc, g) => acc + g.partySize, 0);
-  const confirmedGuests = guests.filter(g => g.status === 'Confirmed').reduce((acc, g) => acc + g.partySize, 0);
-  const pendingGuests = guests.filter(g => g.status === 'Invited').reduce((acc, g) => acc + g.partySize, 0);
-  const declinedGuests = guests.filter(g => g.status === 'Declined').reduce((acc, g) => acc + g.partySize, 0);
+  const totalInvitedGuests = guests.reduce((acc, g) => acc + (Number(g.partySize) || 1), 0);
+  const confirmedGuests = guests.filter(g => g.status === 'Confirmed').reduce((acc, g) => acc + (Number(g.partySize) || 1), 0);
+  const pendingGuests = guests.filter(g => g.status === 'Invited').reduce((acc, g) => acc + (Number(g.partySize) || 1), 0);
+  const declinedGuests = guests.filter(g => g.status === 'Declined').reduce((acc, g) => acc + (Number(g.partySize) || 1), 0);
 
-  // Cost per head impact calculation
-  // Find food & beverage/catering category spend
-  const cateringCat = event.budget?.categories?.find(c => 
-    c.id === 'catering' || c.name.toLowerCase().includes('cater') || c.name.toLowerCase().includes('food')
-  );
-  const cateringBudget = cateringCat ? cateringCat.planned : Math.round(event.totalBudget * 0.35);
-  const costPerHead = event.guestCount > 0 ? Math.round(cateringBudget / event.guestCount) : 0;
-  const committedCateringSpend = confirmedGuests * costPerHead;
+  // Centralized catering impact metrics
+  const { costPerHead, committedSpend } = useMemo(() => calculateCateringMetrics(event), [event]);
 
   const handleAddGuest = (e) => {
     e.preventDefault();
-    if (!guestName) return;
+    const cleanName = guestName.trim();
+    if (!cleanName) return;
 
     const newGuest = {
       id: 'g-' + Date.now(),
-      name: guestName,
-      partySize: Number(partySize) || 1,
-      group: guestGroup,
-      dietary: guestDietary,
-      status: guestStatus
+      name: cleanName.slice(0, 80),
+      partySize: sanitizeNumber(partySize, 1, 1, 20),
+      group: guestGroup.slice(0, 40),
+      dietary: guestDietary.slice(0, 80),
+      status: ['Confirmed', 'Invited', 'Declined'].includes(guestStatus) ? guestStatus : 'Invited'
     };
 
     onUpdateGuests([...guests, newGuest]);
@@ -325,6 +321,7 @@ export default function GuestsView({ event, onUpdateGuests }) {
                     onClick={() => handleDeleteGuest(guest.id)}
                     className="text-soiree-muted/40 hover:text-soiree-rose p-1 transition-colors"
                     title="Remove guest"
+                    aria-label="Remove guest"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

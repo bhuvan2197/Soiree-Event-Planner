@@ -48,6 +48,18 @@ export default function CoPlannerDrawer({
     scrollToBottom();
   }, [messages, isOpen]);
 
+  // Handle ESC key to dismiss drawer
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleSendMessage = async (textToSend) => {
     const text = textToSend || inputMessage;
     if (!text.trim() || isProcessingChat) return;
@@ -79,7 +91,12 @@ export default function CoPlannerDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-soiree-burgundyDeep/30 backdrop-blur-xs flex justify-end animate-fade-up">
+    <div
+      className="fixed inset-0 z-50 overflow-hidden bg-soiree-burgundyDeep/30 backdrop-blur-xs flex justify-end animate-fade-up"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="coplanner-drawer-title"
+    >
       <div className="w-full max-w-lg bg-soiree-cream h-full border-l border-soiree-sand shadow-luxury flex flex-col justify-between">
         
         {/* Header */}
@@ -88,7 +105,7 @@ export default function CoPlannerDrawer({
             <WaxSeal size={34} />
             <div>
               <div className="flex items-center gap-1.5">
-                <h3 className="font-serif text-lg font-bold text-soiree-burgundyDeep">
+                <h3 id="coplanner-drawer-title" className="font-serif text-lg font-bold text-soiree-burgundyDeep">
                   AI Co-Planner
                 </h3>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -101,6 +118,7 @@ export default function CoPlannerDrawer({
 
           <button
             onClick={onClose}
+            aria-label="Close AI Co-Planner"
             className="p-1.5 rounded-full hover:bg-soiree-sand/60 text-soiree-muted hover:text-soiree-ink transition-colors"
           >
             <X className="w-5 h-5" />
@@ -203,6 +221,7 @@ export default function CoPlannerDrawer({
             <button
               type="submit"
               disabled={!inputMessage.trim() || isProcessingChat}
+              aria-label="Send message to AI Co-Planner"
               className="p-3 rounded-xl bg-soiree-burgundy text-[#FAF5EC] hover:bg-soiree-burgundyDeep disabled:opacity-50 transition-all shadow-sm"
             >
               <Send className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Printer, Share2, Plus, ChevronDown, KeyRound, Check } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
@@ -15,6 +15,16 @@ export default function Navbar({
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Close dropdown on ESC
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setDropdownOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dropdownOpen]);
 
   const handleShare = () => {
     if (!currentEvent) return;
@@ -57,6 +67,9 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-expanded={dropdownOpen}
+                aria-haspopup="true"
+                aria-label="Switch celebration blueprint"
                 className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-soiree-sand bg-soiree-bg/70 hover:bg-soiree-bg text-soiree-ink transition-all text-sm font-medium shadow-inner-soft"
               >
                 <span className="w-2 h-2 rounded-full bg-soiree-burgundy animate-pulse" />

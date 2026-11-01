@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   PieChart as PieIcon,
   Sparkles,
@@ -12,6 +12,7 @@ import {
   Info
 } from 'lucide-react';
 import Badge from '../common/Badge';
+import { sanitizeNumber } from '../../utils/eventValidation';
 
 export default function BudgetView({
   event,
@@ -19,11 +20,17 @@ export default function BudgetView({
   onAiRebalance,
   isRebalancing
 }) {
-  const [whatIfBudget, setWhatIfBudget] = useState(event.totalBudget);
-  const [whatIfGuests, setWhatIfGuests] = useState(event.guestCount);
+  const [whatIfBudget, setWhatIfBudget] = useState(event.totalBudget || 50000);
+  const [whatIfGuests, setWhatIfGuests] = useState(event.guestCount || 100);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [rebalanceResult, setRebalanceResult] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
+
+  // Sync sandbox sliders whenever active event changes
+  useEffect(() => {
+    setWhatIfBudget(event.totalBudget || 50000);
+    setWhatIfGuests(event.guestCount || 100);
+  }, [event.id, event.totalBudget, event.guestCount]);
 
   // New category form state
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -52,31 +59,53 @@ export default function BudgetView({
     '#A86F58'  // warm terracotta
   ];
 
-  // SVG Donut slices calculation
-  let cumulativePercent = 0;
-  const donutSlices = categories.map((cat, idx) => {
-    const fraction = totalPlanned > 0 ? cat.planned / totalPlanned : 0;
-    const startAngle = cumulativePercent * 360;
-    cumulativePercent += fraction;
-    const endAngle = cumulativePercent * 360;
+  // Memoized SVG Donut slices calculation with full circle protection
+  const donutSlices = useMemo(() => {
+    if (totalPlanned <= 0 || categories.length === 0) return [];
+    
+    // Check if only 1 positive category exists
+    const nonZeroCats = categories.filter(c => (Number(c.planned) || 0) > 0);
+    if (nonZeroCats.length === 1) {
+      const single = nonZeroCats[0];
+      return [{
+        id: single.id,
+        name: single.name,
+        planned: single.planned,
+        actual: single.actual,
+        percent: 100,
+        color: PALETTE[0],
+        isFullCircle: true
+      }];
+    }
 
-    // Convert angles to SVG arc coordinates
-    const startX = 50 + 40 * Math.cos((startAngle - 90) * (Math.PI / 180));
-    const startY = 50 + 40 * Math.sin((startAngle - 90) * (Math.PI / 180));
-    const endX = 50 + 40 * Math.cos((endAngle - 90) * (Math.PI / 180));
-    const endY = 50 + 40 * Math.sin((endAngle - 90) * (Math.PI / 180));
-    const largeArc = fraction > 0.5 ? 1 : 0;
+    let cumulativePercent = 0;
+    return categories.map((cat, idx) => {
+      const plannedNum = sanitizeNumber(cat.planned, 0, 0);
+      const fraction = totalPlanned > 0 ? plannedNum / totalPlanned : 0;
+      const startAngle = cumulativePercent * 360;
+      cumulativePercent += fraction;
+      const endAngle = Math.min(360, cumulativePercent * 360);
 
-    return {
-      id: cat.id,
-      name: cat.name,
-      planned: cat.planned,
-      actual: cat.actual,
-      percent: Math.round(fraction * 100),
-      color: PALETTE[idx % PALETTE.length],
-      pathData: `M 50 50 L ${startX} ${startY} A 40 40 0 ${largeArc} 1 ${endX} ${endY} Z`
-    };
-  });
+      const startRad = (startAngle - 90) * (Math.PI / 180);
+      const endRad = (endAngle - 90) * (Math.PI / 180);
+      const startX = 50 + 40 * Math.cos(startRad);
+      const startY = 50 + 40 * Math.sin(startRad);
+      const endX = 50 + 40 * Math.cos(endRad);
+      const endY = 50 + 40 * Math.sin(endRad);
+      const largeArc = fraction > 0.5 ? 1 : 0;
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        planned: plannedNum,
+        actual: sanitizeNumber(cat.actual, 0, 0),
+        percent: Math.round(fraction * 100),
+        color: PALETTE[idx % PALETTE.length],
+        pathData: `M 50 50 L ${startX.toFixed(2)} ${startY.toFixed(2)} A 40 40 0 ${largeArc} 1 ${endX.toFixed(2)} ${endY.toFixed(2)} Z`,
+        isFullCircle: false
+      };
+    });
+  }, [categories, totalPlanned]);
 
   // What-If Simulation
   const handleApplyWhatIf = () => {
@@ -135,7 +164,11 @@ export default function BudgetView({
   const handleUpdateCategory = (catId, field, value) => {
     const updated = categories.map(c => {
       if (c.id === catId) {
-        return { ...c, [field]: field === 'planned' || field === 'actual' ? Number(value) : value };
+        let cleanVal = value;
+        if (field === 'planned' || field === 'actual') {
+          cleanVal = sanitizeNumber(value, 0, 0);
+        }
+        return { ...c, [field]: cleanVal };
       }
       return c;
     });
@@ -153,13 +186,14 @@ export default function BudgetView({
 
   const handleAddCategorySubmit = (e) => {
     e.preventDefault();
-    if (!newCatName) return;
+    const trimmed = newCatName.trim();
+    if (!trimmed) return;
     const newCat = {
       id: 'cat-' + Date.now(),
-      name: newCatName,
-      planned: Number(newCatPlanned) || 0,
+      name: trimmed.slice(0, 80),
+      planned: sanitizeNumber(newCatPlanned, 5000, 0),
       actual: 0,
-      notes: newCatNotes || 'User added item'
+      notes: (newCatNotes || 'Custom allocation').slice(0, 150)
     };
     onUpdateBudget({
       budget: { ...event.budget, categories: [...categories, newCat] }
@@ -344,16 +378,33 @@ export default function BudgetView({
 
           {/* SVG Donut Visual */}
           <div className="relative w-64 h-64 mx-auto">
-            <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+            <svg
+              viewBox="0 0 100 100"
+              className="w-full h-full transform -rotate-90"
+              role="img"
+              aria-label="Category allocation donut chart"
+            >
               {donutSlices.map((slice) => (
-                <path
-                  key={slice.id}
-                  d={slice.pathData}
-                  fill={slice.color}
-                  className="transition-opacity hover:opacity-85 cursor-pointer"
-                >
-                  <title>{`${slice.name}: ${event.currencySymbol}${slice.planned.toLocaleString()} (${slice.percent}%)`}</title>
-                </path>
+                slice.isFullCircle ? (
+                  <circle
+                    key={slice.id}
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill={slice.color}
+                  >
+                    <title>{`${slice.name}: ${event.currencySymbol}${slice.planned.toLocaleString()} (${slice.percent}%)`}</title>
+                  </circle>
+                ) : (
+                  <path
+                    key={slice.id}
+                    d={slice.pathData}
+                    fill={slice.color}
+                    className="transition-opacity hover:opacity-85 cursor-pointer"
+                  >
+                    <title>{`${slice.name}: ${event.currencySymbol}${slice.planned.toLocaleString()} (${slice.percent}%)`}</title>
+                  </path>
+                )
               ))}
               {/* Inner cutout circle to form Donut */}
               <circle cx="50" cy="50" r="26" fill="#FAF5EC" />

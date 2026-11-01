@@ -1,16 +1,20 @@
 import { SAMPLE_EVENTS } from '../data/sampleEvents';
+import { normalizeAndValidateEvent, sanitizeNumber } from '../utils/eventValidation';
 
 const STORAGE_KEY_API_KEY = 'soiree_gemini_api_key';
+const REQUEST_TIMEOUT_MS = 15000;
 
 export function getStoredApiKey() {
+  if (typeof localStorage === 'undefined') return '';
   const customKey = localStorage.getItem(STORAGE_KEY_API_KEY);
   if (customKey && customKey.trim().length > 0) return customKey.trim();
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const envKey = import.meta.env?.VITE_GEMINI_API_KEY;
   if (envKey && envKey.trim().length > 0 && envKey !== 'YOUR_API_KEY_HERE') return envKey.trim();
   return '';
 }
 
 export function setStoredApiKey(key) {
+  if (typeof localStorage === 'undefined') return;
   if (!key) {
     localStorage.removeItem(STORAGE_KEY_API_KEY);
   } else {
@@ -29,8 +33,11 @@ async function callGeminiApi(promptText, apiKey) {
   let lastError = null;
 
   for (const model of models) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
       const payload = {
         contents: [
           {
@@ -48,24 +55,28 @@ async function callGeminiApi(promptText, apiKey) {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+        throw new Error(`Gemini API returned status ${response.status}`);
       }
 
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) throw new Error('Empty response from Gemini');
+      if (!rawText) throw new Error('Empty response payload from Gemini endpoint');
 
       // Strip potential code fences if any
       const cleaned = rawText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
       return JSON.parse(cleaned);
     } catch (err) {
+      clearTimeout(timeoutId);
       lastError = err;
-      console.warn(`Attempt with ${model} failed:`, err.message);
+      const isTimeout = err.name === 'AbortError';
+      console.warn(`Attempt with ${model} failed (${isTimeout ? 'Request timed out' : 'Service unavailable'})`);
     }
   }
 
@@ -146,11 +157,11 @@ Strict JSON output format:
 
       const aiPlan = await callGeminiApi(prompt, apiKey);
       if (aiPlan && aiPlan.title && aiPlan.budget?.categories) {
-        return {
+        return normalizeAndValidateEvent({
           ...aiPlan,
           id: 'event-' + Date.now(),
           isLiveGenerated: true
-        };
+        }, inputData);
       }
     } catch (error) {
       console.warn("Live Gemini plan generation failed, using intelligent fallback:", error);
@@ -170,8 +181,8 @@ function generateIntelligentFallbackPlan(input) {
     baseTemplate = SAMPLE_EVENTS.community;
   }
 
-  const budget = Number(input.totalBudget) || baseTemplate.totalBudget;
-  const guestCount = Number(input.guestCount) || baseTemplate.guestCount;
+  const budget = sanitizeNumber(input.totalBudget, baseTemplate.totalBudget, 1000);
+  const guestCount = sanitizeNumber(input.guestCount, baseTemplate.guestCount, 1);
   const currency = input.currency || baseTemplate.currency;
   const currencySymbol = currency === 'INR' ? '₹' : (currency === 'EUR' ? '€' : (currency === 'GBP' ? '£' : '$'));
 
@@ -184,7 +195,7 @@ function generateIntelligentFallbackPlan(input) {
     if (idx === arr.length - 1) {
       // Balance contingency so sum equals budget exactly
       const priorSum = arr.slice(0, idx).reduce((acc, c) => acc + Math.round((c.planned * scale) / 100) * 100, 0);
-      planned = Math.max(Math.round(budget * 0.08), budget - priorSum);
+      planned = Math.max(0, budget - priorSum);
     }
     return {
       ...cat,
@@ -193,7 +204,7 @@ function generateIntelligentFallbackPlan(input) {
     };
   });
 
-  return {
+  const rawFallback = {
     ...JSON.parse(JSON.stringify(baseTemplate)),
     id: 'event-' + Date.now(),
     title: input.description && input.description.length > 5 
@@ -216,6 +227,8 @@ function generateIntelligentFallbackPlan(input) {
     },
     isLiveGenerated: false
   };
+
+  return normalizeAndValidateEvent(rawFallback, baseTemplate);
 }
 
 /**
@@ -243,8 +256,18 @@ Return strict JSON:
 The sum of categories planned MUST exactly equal ${newBudget}.
 `;
       const result = await callGeminiApi(prompt, apiKey);
-      if (result && result.categories && Array.isArray(result.categories)) {
-        return result;
+      if (result && Array.isArray(result.categories) && result.categories.length > 0) {
+        const sanitizedCats = result.categories.map((c, i) => ({
+          id: typeof c.id === 'string' && c.id ? c.id : `cat-${i + 1}`,
+          name: typeof c.name === 'string' && c.name ? c.name : `Category ${i + 1}`,
+          planned: sanitizeNumber(c.planned, 0, 0),
+          actual: sanitizeNumber(c.actual, 0, 0),
+          notes: typeof c.notes === 'string' ? c.notes : ''
+        }));
+        return {
+          reasoning: typeof result.reasoning === 'string' ? result.reasoning : 'AI optimized allocations across categories.',
+          categories: sanitizedCats
+        };
       }
     } catch (e) {
       console.warn("AI budget rebalance failed, falling back to heuristic:", e);
@@ -253,7 +276,7 @@ The sum of categories planned MUST exactly equal ${newBudget}.
 
   // Fallback intelligent rebalancing
   const scale = newBudget / (currentTotal || 1);
-  const updatedCategories = plan.budget.categories.map((c, i, arr) => {
+  const updatedCategories = (plan.budget?.categories || []).map((c, i, arr) => {
     let newPlanned = Math.round((c.planned * scale) / 50) * 50;
     if (i === arr.length - 1) {
       const sumBefore = arr.slice(0, i).reduce((sum, item) => sum + Math.round((item.planned * scale) / 50) * 50, 0);
@@ -261,7 +284,7 @@ The sum of categories planned MUST exactly equal ${newBudget}.
     }
     return {
       ...c,
-      planned: newPlanned
+      planned: sanitizeNumber(newPlanned, 50, 0)
     };
   });
 

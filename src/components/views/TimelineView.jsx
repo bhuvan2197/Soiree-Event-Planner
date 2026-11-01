@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   CheckCircle2,
@@ -44,6 +44,18 @@ export default function TimelineView({
     'Event Day'
   ];
 
+  // Handle ESC key for modal
+  useEffect(() => {
+    if (!showAddTaskModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowAddTaskModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAddTaskModal]);
+
   // Burgundy & Gold petal confetti trigger
   const triggerBurgundyConfetti = () => {
     confetti({
@@ -66,14 +78,15 @@ export default function TimelineView({
 
   const handleCreateTask = (e) => {
     e.preventDefault();
-    if (!newTaskTitle) return;
+    const cleanTitle = newTaskTitle.trim();
+    if (!cleanTitle) return;
     const task = {
       id: 'task-' + Date.now(),
-      title: newTaskTitle,
+      title: cleanTitle.slice(0, 150),
       phase: newTaskPhase,
-      dueDate: newTaskDueDate,
+      dueDate: newTaskDueDate || event.date,
       priority: newTaskPriority,
-      owner: newTaskOwner,
+      owner: (newTaskOwner || 'Host').trim().slice(0, 50),
       completed: false
     };
     onAddTask(task);

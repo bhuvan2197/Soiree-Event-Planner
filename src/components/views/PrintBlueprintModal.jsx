@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Printer,
   Copy,
@@ -14,11 +14,26 @@ import {
 } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
+import { calculateReadinessScore } from '../../utils/eventValidation';
 
 export default function PrintBlueprintModal({ event, isOpen, onClose }) {
   const [copied, setCopied] = useState(false);
 
+  // Handle ESC key to dismiss modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !event) return null;
+
+  const currentReadiness = calculateReadinessScore(event);
 
   const handlePrint = () => {
     window.print();
@@ -78,7 +93,12 @@ ${runOfShowText}
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-soiree-burgundyDeep/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-up">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-soiree-burgundyDeep/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-up"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dossier-modal-title"
+    >
       <div className="bg-soiree-cream rounded-3xl border border-soiree-sand max-w-4xl w-full max-h-[92vh] flex flex-col shadow-luxury-lg overflow-hidden">
         
         {/* Top bar controls */}
@@ -86,7 +106,7 @@ ${runOfShowText}
           <div className="flex items-center gap-3">
             <WaxSeal size={36} />
             <div>
-              <h3 className="font-serif text-lg font-bold text-soiree-burgundyDeep">
+              <h3 id="dossier-modal-title" className="font-serif text-lg font-bold text-soiree-burgundyDeep">
                 Event Blueprint Dossier
               </h3>
               <p className="text-xs text-soiree-muted">
@@ -114,6 +134,7 @@ ${runOfShowText}
 
             <button
               onClick={onClose}
+              aria-label="Close Event Dossier"
               className="p-1.5 rounded-full hover:bg-soiree-sand/60 text-soiree-muted hover:text-soiree-ink transition-colors ml-1"
             >
               <X className="w-5 h-5" />

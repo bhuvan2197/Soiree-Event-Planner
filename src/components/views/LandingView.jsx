@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Calendar, Users, DollarSign, MapPin, Heart, Compass, ArrowRight, Wand2 } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
+import { sanitizeNumber } from '../../utils/eventValidation';
 
 export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating }) {
   const [description, setDescription] = useState(
@@ -49,16 +50,16 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
   const handleSubmit = (e) => {
     e.preventDefault();
     onGeneratePlan({
-      description,
+      description: description.trim().slice(0, 500),
       eventType,
-      guestCount: Number(guestCount) || 100,
-      totalBudget: Number(totalBudget) || 500000,
+      guestCount: sanitizeNumber(guestCount, 100, 1, 50000),
+      totalBudget: sanitizeNumber(totalBudget, 50000, 1000, 1000000000),
       currency,
       date,
-      city,
+      city: city.trim().slice(0, 100),
       vibe: selectedVibes,
-      dietary,
-      culturalNotes
+      dietary: dietary.trim().slice(0, 150),
+      culturalNotes: culturalNotes.trim().slice(0, 300)
     });
   };
 

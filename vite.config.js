@@ -6,6 +6,23 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: true
+    host: true,
+    cors: false
+  },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          icons: ['lucide-react'],
+          effects: ['canvas-confetti']
+        }
+      }
+    }
+  },
+  test: {
+    environment: 'node',
+    globals: true
   }
 })

@@ -165,6 +165,7 @@ export default function IdeasStudioView({
                     onClick={() => handleToggleSave(idea.id)}
                     className="p-1.5 rounded-full hover:bg-soiree-sand/50 transition-colors"
                     title={idea.saved ? 'Remove from saved' : 'Save idea'}
+                    aria-label={idea.saved ? 'Remove from saved ideas' : 'Save idea'}
                   >
                     <Heart
                       className={`w-4 h-4 transition-colors ${

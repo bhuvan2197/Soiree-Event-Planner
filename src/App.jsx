@@ -13,6 +13,7 @@ import CoPlannerDrawer from './components/views/CoPlannerDrawer';
 import PrintBlueprintModal from './components/views/PrintBlueprintModal';
 import ApiKeyModal from './components/views/ApiKeyModal';
 import Toast from './components/common/Toast';
+import { normalizeAndValidateEvent } from './utils/eventValidation';
 
 import { SAMPLE_EVENTS } from './data/sampleEvents';
 import {
@@ -30,18 +31,24 @@ const STORAGE_KEY_EVENTS = 'soiree_saved_events';
 const STORAGE_KEY_CURRENT_ID = 'soiree_active_event_id';
 
 export default function App() {
-  // Initialize events list
+  // Initialize events list with schema validation
   const [events, setEvents] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_EVENTS);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(ev => normalizeAndValidateEvent(ev, SAMPLE_EVENTS.wedding));
+        }
       }
     } catch (e) {
       console.warn("Failed reading saved events:", e);
     }
-    return [SAMPLE_EVENTS.wedding, SAMPLE_EVENTS.birthday, SAMPLE_EVENTS.community];
+    return [
+      normalizeAndValidateEvent(SAMPLE_EVENTS.wedding),
+      normalizeAndValidateEvent(SAMPLE_EVENTS.birthday),
+      normalizeAndValidateEvent(SAMPLE_EVENTS.community)
+    ];
   });
 
   const [currentEventId, setCurrentEventId] = useState(() => {
@@ -92,11 +99,12 @@ export default function App() {
     }, 4000);
   };
 
-  // Helper to update current event
+  // Helper to update current event with schema normalization
   const updateCurrentEvent = (mutator) => {
     setEvents(prev => prev.map(ev => {
       if (ev.id === currentEventId) {
-        return typeof mutator === 'function' ? mutator(ev) : { ...ev, ...mutator };
+        const rawUpdated = typeof mutator === 'function' ? mutator(ev) : { ...ev, ...mutator };
+        return normalizeAndValidateEvent(rawUpdated, ev);
       }
       return ev;
     }));

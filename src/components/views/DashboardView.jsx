@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Calendar,
   Clock,
@@ -13,6 +13,7 @@ import {
   Check
 } from 'lucide-react';
 import Badge from '../common/Badge';
+import { calculateDaysRemaining, calculateReadinessScore, sanitizeNumber } from '../../utils/eventValidation';
 
 export default function DashboardView({
   event,
@@ -22,50 +23,65 @@ export default function DashboardView({
 }) {
   if (!event) return null;
 
-  // Calculate days remaining
-  const calculateDaysLeft = () => {
-    if (!event.date) return 0;
-    const target = new Date(event.date);
-    const today = new Date();
-    const diff = target.getTime() - today.getTime();
-    return Math.max(0, Math.ceil(diff / (1000 * 3600 * 24)));
-  };
+  // Centralized calculations
+  const daysLeft = useMemo(() => calculateDaysRemaining(event.date), [event.date]);
+  const readiness = useMemo(() => calculateReadinessScore(event), [event]);
 
-  const daysLeft = calculateDaysLeft();
+  // Derived metrics with useMemo
+  const metrics = useMemo(() => {
+    const totalTasks = event.timeline?.length || 0;
+    const completedTasks = event.timeline?.filter(t => t.completed).length || 0;
+    const taskPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Metrics
-  const totalTasks = event.timeline?.length || 0;
-  const completedTasks = event.timeline?.filter(t => t.completed).length || 0;
-  const taskPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const totalVendors = event.vendors?.reduce((acc, cat) => acc + (cat.vendors?.length || 0), 0) || 0;
+    const bookedVendors = event.vendors?.reduce((acc, cat) => {
+      return acc + (cat.vendors?.filter(v => {
+        const s = (v.status || '').toLowerCase();
+        return s === 'booked' || s === 'paid' || s === 'contracted';
+      }).length || 0);
+    }, 0) || 0;
 
-  const totalVendors = event.vendors?.reduce((acc, cat) => acc + (cat.vendors?.length || 0), 0) || 0;
-  const bookedVendors = event.vendors?.reduce((acc, cat) => {
-    return acc + (cat.vendors?.filter(v => v.status === 'Booked' || v.status === 'Paid').length || 0);
-  }, 0) || 0;
+    const confirmedGuests = event.guests?.filter(g => g.status === 'Confirmed').reduce((acc, g) => acc + (Number(g.partySize) || 1), 0) || 0;
 
-  const confirmedGuests = event.guests?.filter(g => g.status === 'Confirmed').reduce((acc, g) => acc + g.partySize, 0) || 0;
+    const totalSpent = event.budget?.categories?.reduce((acc, c) => acc + (Number(c.actual) || 0), 0) || 0;
+    const budgetRatio = event.totalBudget > 0 ? Math.min(100, Math.round((totalSpent / event.totalBudget) * 100)) : 0;
 
-  const totalSpent = event.budget?.categories?.reduce((acc, c) => acc + (c.actual || 0), 0) || 0;
-  const budgetRatio = event.totalBudget > 0 ? Math.min(100, Math.round((totalSpent / event.totalBudget) * 100)) : 0;
+    // Next 3 tasks to do (uncompleted, prioritized)
+    const nextThreeTasks = (event.timeline || [])
+      .filter(t => !t.completed)
+      .sort((a, b) => {
+        const pMap = { High: 3, Medium: 2, Low: 1 };
+        return (pMap[b.priority] || 1) - (pMap[a.priority] || 1);
+      })
+      .slice(0, 3);
 
-  // Computed Readiness Score
-  const readiness = Math.min(100, Math.round(
-    (taskPercent * 0.4) +
-    ((totalVendors > 0 ? (bookedVendors / totalVendors) : 0.5) * 40) +
-    (totalSpent <= event.totalBudget ? 20 : 5)
-  ));
+    return {
+      totalTasks,
+      completedTasks,
+      taskPercent,
+      totalVendors,
+      bookedVendors,
+      confirmedGuests,
+      totalSpent,
+      budgetRatio,
+      nextThreeTasks
+    };
+  }, [event.timeline, event.vendors, event.guests, event.budget, event.totalBudget]);
 
-  // Next 3 tasks to do (uncompleted, prioritized)
-  const nextThreeTasks = (event.timeline || [])
-    .filter(t => !t.completed)
-    .sort((a, b) => {
-      const pMap = { High: 3, Medium: 2, Low: 1 };
-      return (pMap[b.priority] || 1) - (pMap[a.priority] || 1);
-    })
-    .slice(0, 3);
+  const {
+    totalTasks,
+    completedTasks,
+    taskPercent,
+    totalVendors,
+    bookedVendors,
+    confirmedGuests,
+    totalSpent,
+    budgetRatio,
+    nextThreeTasks
+  } = metrics;
 
   // SVG Ring calculation
-  const radius = 42;
+  const radius = 38;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (readiness / 100) * circumference;
 
@@ -131,21 +147,26 @@ export default function DashboardView({
             {/* Circular Readiness Ring */}
             <div className="flex items-center gap-3">
               <div className="relative w-20 h-20 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
+                <svg
+                  viewBox="0 0 100 100"
+                  className="w-full h-full transform -rotate-90"
+                  role="img"
+                  aria-label={`Celebration readiness: ${readiness}%`}
+                >
                   <circle
-                    cx="40"
-                    cy="40"
+                    cx="50"
+                    cy="50"
                     r={radius}
                     stroke="#E3D5BF"
-                    strokeWidth="6"
+                    strokeWidth="7"
                     fill="transparent"
                   />
                   <circle
-                    cx="40"
-                    cy="40"
+                    cx="50"
+                    cy="50"
                     r={radius}
                     stroke="#6D1A2B"
-                    strokeWidth="6"
+                    strokeWidth="7"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
                     strokeLinecap="round"

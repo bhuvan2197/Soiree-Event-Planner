@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   MessageSquare,
@@ -14,9 +14,11 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react';
 import Badge from '../common/Badge';
+import { sanitizeNumber } from '../../utils/eventValidation';
 
 export default function VendorsView({
   event,
@@ -49,6 +51,19 @@ export default function VendorsView({
     'Paid'
   ];
 
+  // ESC key listener for modals
+  useEffect(() => {
+    if (!draftModalData && !showAddVendorModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setDraftModalData(null);
+        setShowAddVendorModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [draftModalData, showAddVendorModal]);
+
   const handleOpenDraft = async (categoryName) => {
     const draft = await onDraftMessage(categoryName, draftTone);
     if (draft) {
@@ -69,16 +84,17 @@ export default function VendorsView({
 
   const handleSaveVendor = (e) => {
     e.preventDefault();
-    if (!vendorName || !activeCategory) return;
+    const cleanName = vendorName.trim();
+    if (!cleanName || !activeCategory) return;
 
     const newVendor = {
       id: 'vnd-' + Date.now(),
-      name: vendorName,
-      contact: vendorContact,
+      name: cleanName.slice(0, 80),
+      contact: vendorContact.trim().slice(0, 80),
       status: vendorStatus,
-      quote: Number(vendorQuote) || 0,
-      advancePaid: Number(vendorAdvance) || 0,
-      notes: vendorNotes
+      quote: sanitizeNumber(vendorQuote, 0, 0),
+      advancePaid: sanitizeNumber(vendorAdvance, 0, 0),
+      notes: vendorNotes.slice(0, 200)
     };
 
     const updatedCategories = vendorCategories.map(cat => {
