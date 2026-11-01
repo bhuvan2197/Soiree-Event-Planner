@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   Calendar,
-  Clock,
   CheckCircle2,
-  AlertCircle,
   Users,
   Store,
   DollarSign,
@@ -13,7 +11,7 @@ import {
   Check
 } from 'lucide-react';
 import Badge from '../common/Badge';
-import { calculateDaysRemaining, calculateReadinessScore, sanitizeNumber } from '../../utils/eventValidation';
+import { calculateDaysRemaining, calculateReadinessScore } from '../../utils/eventValidation';
 
 export default function DashboardView({
   event,

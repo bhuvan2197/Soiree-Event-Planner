@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar,
-  CheckCircle2,
   Clock,
   Plus,
-  Layers,
   Sparkles,
   Columns,
   ListOrdered,
-  CalendarDays,
   User,
   AlertCircle,
   Check,

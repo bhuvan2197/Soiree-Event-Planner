@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Store,
   MessageSquare,
   HelpCircle,
   AlertTriangle,
   Plus,
-  DollarSign,
   Phone,
   Copy,
   Check,
   Send,
   Sparkles,
-  ExternalLink,
   ChevronRight,
   ShieldCheck,
   Trash2,
@@ -474,9 +471,10 @@ export default function VendorsView({
               </div>
               <button
                 onClick={() => setDraftModalData(null)}
-                className="text-soiree-muted hover:text-soiree-ink text-sm font-bold p-1"
+                className="text-soiree-muted hover:text-soiree-ink p-1 rounded-full hover:bg-soiree-sand/40 transition-colors"
+                aria-label="Close inquiry draft"
               >
-                ✕
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 

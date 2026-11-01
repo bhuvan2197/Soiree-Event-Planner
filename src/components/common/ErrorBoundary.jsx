@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import WaxSeal from './WaxSeal';
 
 export default class ErrorBoundary extends React.Component {

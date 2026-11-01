@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
-  CloudRain,
   AlertTriangle,
-  Clock,
-  ArrowRight,
   Plus,
   Trash2,
   CheckCircle

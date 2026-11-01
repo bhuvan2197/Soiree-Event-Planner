@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Calendar, Users, DollarSign, MapPin, Heart, Compass, ArrowRight, Wand2 } from 'lucide-react';
+import { Sparkles, Calendar, Users, DollarSign, MapPin, Compass, ArrowRight, Wand2 } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
 import { sanitizeNumber } from '../../utils/eventValidation';

@@ -4,13 +4,10 @@ import {
   Copy,
   Check,
   X,
-  FileText,
   Calendar,
   Users,
   DollarSign,
-  MapPin,
-  Clock,
-  Sparkles
+  MapPin
 } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';

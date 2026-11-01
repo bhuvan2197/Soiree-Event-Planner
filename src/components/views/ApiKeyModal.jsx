@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { KeyRound, Sparkles, X, Check, Trash2, ShieldCheck, Lock } from 'lucide-react';
+import { KeyRound, Sparkles, X, Check, Trash2, Lock } from 'lucide-react';
 import Badge from '../common/Badge';
 import { getStoredApiKey, setStoredApiKey } from '../../services/geminiService';
 

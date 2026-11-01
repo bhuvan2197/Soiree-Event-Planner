@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/navigation/Navbar';
 import SubNav from './components/navigation/SubNav';
 import LandingView from './components/views/LandingView';
@@ -70,6 +70,7 @@ export default function App() {
   const [isApiKeyOpen, setIsApiKeyOpen] = useState(false);
   const [isCoPlannerOpen, setIsCoPlannerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const toastTimeoutRef = useRef(null);
   const [aiLiveStatus, setAiLiveStatus] = useState(isAiLive());
 
   // Sync to LocalStorage
@@ -91,10 +92,13 @@ export default function App() {
 
   const currentEvent = events.find(e => e.id === currentEventId) || null;
 
-  // Show Toast helper
+  // Show Toast helper with cleanup
   const showToast = (msg) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => {
+    toastTimeoutRef.current = setTimeout(() => {
       setToastMessage(prev => (prev === msg ? null : prev));
     }, 4000);
   };

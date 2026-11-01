@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  PieChart as PieIcon,
   Sparkles,
   Sliders,
-  DollarSign,
   AlertTriangle,
   Plus,
   Trash2,
   Check,
-  RefreshCw,
   Info
 } from 'lucide-react';
 import Badge from '../common/Badge';
@@ -22,7 +19,6 @@ export default function BudgetView({
 }) {
   const [whatIfBudget, setWhatIfBudget] = useState(event.totalBudget || 50000);
   const [whatIfGuests, setWhatIfGuests] = useState(event.guestCount || 100);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [rebalanceResult, setRebalanceResult] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
 

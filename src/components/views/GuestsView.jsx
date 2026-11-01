@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Users,
   UserPlus,
   Utensils,
   CheckCircle,
   HelpCircle,
-  XCircle,
   DollarSign,
   Trash2,
   Filter

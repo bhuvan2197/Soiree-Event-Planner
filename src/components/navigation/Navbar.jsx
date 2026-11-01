@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Printer, Share2, Plus, ChevronDown, KeyRound, Check } from 'lucide-react';
+import { Printer, Share2, Plus, ChevronDown, KeyRound, Check } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
 

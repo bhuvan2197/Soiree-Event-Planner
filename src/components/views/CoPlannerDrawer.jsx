@@ -1,14 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Sparkles,
   Send,
   X,
   Bot,
   User,
-  CheckCircle2,
-  ArrowRight,
-  RefreshCw,
-  Wand2
+  CheckCircle2
 } from 'lucide-react';
 import WaxSeal from '../common/WaxSeal';
 import Badge from '../common/Badge';
