@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: #F5EDE0;
+    color: #2B1B1B;
+    background-image: 
+      radial-gradient(#E3D5BF 0.75px, transparent 0.75px),
+      radial-gradient(#FAF5EC 0.75px, #F5EDE0 0.75px);
+    background-size: 30px 30px;
+    background-position: 0 0, 15px 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Custom scrollbars with elegant burgundy touch */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EDE0;
+}
+::-webkit-scrollbar-thumb {
+  background: #E3D5BF;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6D1A2B;
+}
+
+/* Subtle luxury animations */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(109, 26, 43, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(109, 26, 43, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Print styling for Event Blueprint */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #111111 !important;
+    font-size: 11pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .blueprint-card {
+    border: 1px solid #CCC !important;
+    box-shadow: none !important;
+    background: #FFFFFF !important;
+  }
+}
