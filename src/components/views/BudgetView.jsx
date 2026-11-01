@@ -471,6 +471,7 @@ export default function BudgetView({
                 <input
                   type="text"
                   placeholder="Category Name"
+                  aria-label="New category name"
                   required
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
@@ -479,6 +480,7 @@ export default function BudgetView({
                 <input
                   type="number"
                   placeholder="Planned Budget"
+                  aria-label="New category planned budget"
                   required
                   value={newCatPlanned}
                   onChange={(e) => setNewCatPlanned(e.target.value)}
@@ -487,6 +489,7 @@ export default function BudgetView({
                 <input
                   type="text"
                   placeholder="Notes"
+                  aria-label="New category notes"
                   value={newCatNotes}
                   onChange={(e) => setNewCatNotes(e.target.value)}
                   className="rounded-xl border border-soiree-sand bg-white px-3 py-1.5 text-xs outline-none focus:border-soiree-burgundy"
@@ -549,8 +552,9 @@ export default function BudgetView({
                       onClick={() => handleDeleteCategory(cat.id)}
                       className="text-soiree-muted/60 hover:text-soiree-rose transition-colors p-1"
                       title="Delete category"
+                      aria-label={`Delete category ${cat.name}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   </div>
 
@@ -564,6 +568,7 @@ export default function BudgetView({
                           type="number"
                           value={cat.planned}
                           onChange={(e) => handleUpdateCategory(cat.id, 'planned', e.target.value)}
+                          aria-label={`Planned amount for ${cat.name}`}
                           className="w-full bg-transparent border-b border-soiree-sand focus:border-soiree-burgundy outline-none py-0.5"
                         />
                       </div>
@@ -577,6 +582,7 @@ export default function BudgetView({
                           type="number"
                           value={cat.actual}
                           onChange={(e) => handleUpdateCategory(cat.id, 'actual', e.target.value)}
+                          aria-label={`Actual spend for ${cat.name}`}
                           className="w-full bg-transparent border-b border-soiree-sand focus:border-soiree-burgundy outline-none py-0.5"
                         />
                       </div>
@@ -589,6 +595,7 @@ export default function BudgetView({
                         value={cat.notes || ''}
                         onChange={(e) => handleUpdateCategory(cat.id, 'notes', e.target.value)}
                         placeholder="Details..."
+                        aria-label={`Notes for ${cat.name}`}
                         className="w-full bg-transparent border-b border-soiree-sand text-xs text-soiree-muted focus:border-soiree-burgundy outline-none py-0.5"
                       />
                     </div>

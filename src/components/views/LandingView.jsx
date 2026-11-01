@@ -118,22 +118,24 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
           
           {/* Natural Language Free Text Input */}
           <div>
-            <label className="block font-serif text-lg sm:text-xl font-bold text-soiree-burgundyDeep mb-2">
+            <label htmlFor="event-description" className="block font-serif text-lg sm:text-xl font-bold text-soiree-burgundyDeep mb-2">
               Describe your vision in plain language
             </label>
-            <p className="text-xs text-soiree-muted mb-3 font-sans">
+            <p className="text-xs text-soiree-muted mb-3 font-sans" id="event-description-hint">
               Mention the occasion, vibe, guest count, city, budget, and any cultural or dietary essence.
             </p>
             <div className="relative">
               <textarea
+                id="event-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 required
+                aria-describedby="event-description-hint"
                 placeholder="e.g., Sister's engagement, 120 guests, intimate, vegetarian, budget 8 lakh, in March at Jaipur"
                 className="w-full rounded-2xl border border-soiree-sand bg-soiree-bg/50 p-4 text-soiree-ink placeholder-soiree-muted/60 focus:bg-white focus:border-soiree-burgundy focus:ring-1 focus:ring-soiree-burgundy outline-none transition-all text-base leading-relaxed resize-none shadow-inner-soft"
               />
-              <div className="absolute right-3 bottom-3 text-soiree-rose opacity-80 pointer-events-none">
+              <div className="absolute right-3 bottom-3 text-soiree-rose opacity-80 pointer-events-none" aria-hidden="true">
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </div>
             </div>
@@ -167,10 +169,11 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
             
             {/* Guests */}
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-soiree-rose" /> Estimated Guests
+              <label htmlFor="guest-count" className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-soiree-rose" aria-hidden="true" /> Estimated Guests
               </label>
               <input
+                id="guest-count"
                 type="number"
                 min="5"
                 max="5000"
@@ -182,11 +185,13 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
 
             {/* Total Budget */}
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-soiree-rose" /> Total Budget
+              <label htmlFor="total-budget" className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-soiree-rose" aria-hidden="true" /> Total Budget
               </label>
               <div className="flex gap-2">
+                <label htmlFor="currency-select" className="sr-only">Currency</label>
                 <select
+                  id="currency-select"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                   className="rounded-xl border border-soiree-sand bg-soiree-bg/60 px-2.5 py-2 text-xs font-semibold text-soiree-burgundyDeep focus:border-soiree-burgundy outline-none"
@@ -197,6 +202,7 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
                   <option value="GBP">GBP (£)</option>
                 </select>
                 <input
+                  id="total-budget"
                   type="number"
                   min="500"
                   value={totalBudget}
@@ -208,10 +214,11 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
 
             {/* Date */}
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-soiree-rose" /> Celebration Date
+              <label htmlFor="event-date" className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-soiree-rose" aria-hidden="true" /> Celebration Date
               </label>
               <input
+                id="event-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -221,10 +228,11 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
 
             {/* City */}
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-soiree-rose" /> City / Region
+              <label htmlFor="event-city" className="block text-xs font-semibold text-soiree-muted mb-1.5 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-soiree-rose" aria-hidden="true" /> City / Region
               </label>
               <input
+                id="event-city"
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
@@ -264,10 +272,11 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
           {/* Nuances: Dietary & Cultural */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5">
-                Dietary & Culinary Tone
+              <label htmlFor="dietary-tone" className="block text-xs font-semibold text-soiree-muted mb-1.5">
+                Dietary &amp; Culinary Tone
               </label>
               <input
+                id="dietary-tone"
                 type="text"
                 value={dietary}
                 onChange={(e) => setDietary(e.target.value)}
@@ -276,10 +285,11 @@ export default function LandingView({ onGeneratePlan, onLoadSample, isGenerating
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1.5">
+              <label htmlFor="cultural-notes" className="block text-xs font-semibold text-soiree-muted mb-1.5">
                 Cultural / Ceremonial Traditions
               </label>
               <input
+                id="cultural-notes"
                 type="text"
                 value={culturalNotes}
                 onChange={(e) => setCulturalNotes(e.target.value)}

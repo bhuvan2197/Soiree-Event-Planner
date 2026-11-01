@@ -33,12 +33,20 @@ describe('eventValidation Utilities', () => {
     it('validates ISO dates correctly', () => {
       expect(isValidDateString('2026-06-20')).toBe(true);
       expect(isValidDateString('2025-12-31')).toBe(true);
+      expect(isValidDateString('2024-02-29')).toBe(true); // Leap year
     });
 
-    it('rejects invalid dates or non-strings', () => {
+    it('rejects invalid dates, impossible calendar dates, or non-strings', () => {
       expect(isValidDateString('not-a-date')).toBe(false);
       expect(isValidDateString('')).toBe(false);
       expect(isValidDateString(null)).toBe(false);
+      expect(isValidDateString(undefined)).toBe(false);
+      expect(isValidDateString(12345678)).toBe(false);
+      expect(isValidDateString('2026-02-31')).toBe(false); // Feb 31 does not exist
+      expect(isValidDateString('2025-02-29')).toBe(false); // 2025 is not a leap year
+      expect(isValidDateString('2026-99-99')).toBe(false); // Invalid month and day
+      expect(isValidDateString('2026-00-15')).toBe(false); // Month 0 does not exist
+      expect(isValidDateString('2026-13-10')).toBe(false); // Month 13 does not exist
     });
   });
 
@@ -58,6 +66,20 @@ describe('eventValidation Utilities', () => {
   describe('calculateReadinessScore', () => {
     it('computes 0 for empty or null event', () => {
       expect(calculateReadinessScore(null)).toBe(0);
+      expect(calculateReadinessScore(undefined)).toBe(0);
+      expect(calculateReadinessScore({})).toBe(60); // Neutral defaults
+    });
+
+    it('gives max 100 points when everything is completed, booked, and on budget', () => {
+      const perfectEvent = {
+        totalBudget: 50000,
+        timeline: [{ completed: true }, { completed: true }],
+        vendors: [{ vendors: [{ status: 'Booked' }, { status: 'Contracted' }] }],
+        budget: {
+          categories: [{ actual: 20000 }, { actual: 25000 }] // 45k <= 50k
+        }
+      };
+      expect(calculateReadinessScore(perfectEvent)).toBe(100);
     });
 
     it('accurately balances tasks, vendors, and budget adherence', () => {
@@ -129,6 +151,31 @@ describe('eventValidation Utilities', () => {
       expect(metrics.confirmedCount).toBe(5); // 2 + 3
       expect(metrics.committedSpend).toBe(1500); // 5 * 300
     });
+
+    it('gracefully handles missing catering category with default 35% estimation', () => {
+      const eventNoCatering = {
+        totalBudget: 100000,
+        guestCount: 50,
+        budget: { categories: [{ id: 'venue', planned: 50000 }] },
+        guests: [{ name: 'VIP', partySize: 2, status: 'Confirmed' }]
+      };
+      const metrics = calculateCateringMetrics(eventNoCatering);
+      expect(metrics.cateringBudget).toBe(35000); // 35% of 100,000
+      expect(metrics.costPerHead).toBe(700); // 35,000 / 50
+      expect(metrics.committedSpend).toBe(1400); // 2 * 700
+    });
+
+    it('handles 0 or negative guest counts defensively', () => {
+      const eventZeroGuests = {
+        totalBudget: 50000,
+        guestCount: 0,
+        budget: { categories: [] },
+        guests: []
+      };
+      const metrics = calculateCateringMetrics(eventZeroGuests);
+      expect(metrics.costPerHead).toBeGreaterThan(0);
+      expect(metrics.confirmedCount).toBe(0);
+    });
   });
 
   describe('normalizeAndValidateEvent', () => {
@@ -156,6 +203,28 @@ describe('eventValidation Utilities', () => {
       expect(Array.isArray(normalized.guests)).toBe(true);
       expect(Array.isArray(normalized.risks)).toBe(true);
       expect(typeof normalized.readinessScore).toBe('number');
+    });
+
+    it('returns fallback when given non-object or null input', () => {
+      const fallback = { id: 'fallback-1', title: 'Fallback Celebration' };
+      expect(normalizeAndValidateEvent(null, fallback)).toBe(fallback);
+      expect(normalizeAndValidateEvent('invalid-string', fallback)).toBe(fallback);
+      expect(normalizeAndValidateEvent(12345, fallback)).toBe(fallback);
+    });
+
+    it('truncates excessively long titles, descriptions, and tags', () => {
+      const hugeString = 'A'.repeat(500);
+      const raw = {
+        title: hugeString,
+        tagline: hugeString,
+        city: hugeString,
+        dietary: hugeString
+      };
+      const normalized = normalizeAndValidateEvent(raw);
+      expect(normalized.title.length).toBeLessThanOrEqual(120);
+      expect(normalized.tagline.length).toBeLessThanOrEqual(300);
+      expect(normalized.city.length).toBeLessThanOrEqual(80);
+      expect(normalized.dietary.length).toBeLessThanOrEqual(150);
     });
   });
 });

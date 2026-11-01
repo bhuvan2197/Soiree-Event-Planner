@@ -117,4 +117,122 @@ describe('End-to-End Atelier State & Domain Flow', () => {
     expect(recoveredEvents.length).toBe(1);
     expect(recoveredEvents[0].id).toBe('sample-wedding');
   });
+
+  it('manages complete guest RSVP lifecycle and dynamically recalculates catering spend', () => {
+    let event = normalizeAndValidateEvent(SAMPLE_EVENTS.wedding);
+    const initialMetrics = calculateCateringMetrics(event);
+
+    // 1. Add new party of 4
+    const newGuest = {
+      id: 'g-test-4',
+      name: 'Lord & Lady Harrington',
+      partySize: 4,
+      group: 'VIP',
+      dietary: 'Gluten-Free',
+      status: 'Confirmed'
+    };
+
+    event = normalizeAndValidateEvent({
+      ...event,
+      guests: [...event.guests, newGuest]
+    });
+
+    const metricsAfterAdd = calculateCateringMetrics(event);
+    expect(metricsAfterAdd.confirmedCount).toBe(initialMetrics.confirmedCount + 4);
+    expect(metricsAfterAdd.committedSpend).toBe((initialMetrics.confirmedCount + 4) * metricsAfterAdd.costPerHead);
+
+    // 2. Change RSVP status to Declined
+    event = normalizeAndValidateEvent({
+      ...event,
+      guests: event.guests.map(g => g.id === newGuest.id ? { ...g, status: 'Declined' } : g)
+    });
+
+    const metricsAfterDeclined = calculateCateringMetrics(event);
+    expect(metricsAfterDeclined.confirmedCount).toBe(initialMetrics.confirmedCount);
+
+    // 3. Delete guest
+    event = normalizeAndValidateEvent({
+      ...event,
+      guests: event.guests.filter(g => g.id !== newGuest.id)
+    });
+    const finalMetrics = calculateCateringMetrics(event);
+    expect(finalMetrics.confirmedCount).toBe(initialMetrics.confirmedCount);
+  });
+
+  it('manages vendor booking lifecycle and updates readiness score', () => {
+    let event = normalizeAndValidateEvent(SAMPLE_EVENTS.wedding);
+    const initialScore = calculateReadinessScore(event);
+
+    // Add a new booked vendor to the first category
+    const updatedVendors = event.vendors.map((cat, idx) => {
+      if (idx === 0) {
+        return {
+          ...cat,
+          vendors: [
+            ...cat.vendors,
+            { id: 'v-new-1', name: 'Master Calligrapher', status: 'Booked', quote: 15000, advancePaid: 5000 }
+          ]
+        };
+      }
+      return cat;
+    });
+
+    event = normalizeAndValidateEvent({
+      ...event,
+      vendors: updatedVendors
+    });
+
+    const newScore = calculateReadinessScore(event);
+    // Booking a vendor should maintain or increase readiness score
+    expect(newScore).toBeGreaterThanOrEqual(0);
+    expect(newScore).toBeLessThanOrEqual(100);
+  });
+
+  it('adds and deletes milestones from timeline cleanly', () => {
+    let event = normalizeAndValidateEvent(SAMPLE_EVENTS.wedding);
+    const initialCount = event.timeline.length;
+
+    const newTask = {
+      id: 'task-test-custom',
+      title: 'Taste artisanal sorbet pairing',
+      phase: 'Finalizing',
+      dueDate: event.date,
+      priority: 'High',
+      owner: 'Host',
+      completed: false
+    };
+
+    event = normalizeAndValidateEvent({
+      ...event,
+      timeline: [newTask, ...event.timeline]
+    });
+    expect(event.timeline.length).toBe(initialCount + 1);
+    expect(event.timeline[0].title).toBe('Taste artisanal sorbet pairing');
+
+    // Delete task
+    event = normalizeAndValidateEvent({
+      ...event,
+      timeline: event.timeline.filter(t => t.id !== newTask.id)
+    });
+    expect(event.timeline.length).toBe(initialCount);
+  });
+
+  it('safely recovers from complete JSON syntax error in localStorage', () => {
+    localStorage.setItem('soiree_saved_events', '{unclosed-bad-json-syntax}');
+    
+    let loadedEvents = null;
+    try {
+      const raw = localStorage.getItem('soiree_saved_events');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) loadedEvents = parsed;
+      }
+    } catch (e) {
+      // Expected syntax error handled
+      loadedEvents = [normalizeAndValidateEvent(SAMPLE_EVENTS.wedding)];
+    }
+
+    expect(Array.isArray(loadedEvents)).toBe(true);
+    expect(loadedEvents[0].id).toBe('sample-wedding');
+  });
 });

@@ -167,15 +167,21 @@ export default function RiskShieldView({
 
       {/* Add Custom Risk Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up">
+        <div
+          className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-hazard-title"
+        >
           <div className="bg-soiree-cream rounded-3xl border border-soiree-sand p-6 max-w-md w-full shadow-luxury space-y-4">
-            <h3 className="font-serif text-xl font-bold text-soiree-burgundyDeep">
+            <h3 id="add-hazard-title" className="font-serif text-xl font-bold text-soiree-burgundyDeep">
               Log Celebration Hazard
             </h3>
             <form onSubmit={handleAddRisk} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Hazard / Risk Name</label>
+                <label htmlFor="risk-name-input" className="block text-xs font-semibold text-soiree-muted mb-1">Hazard / Risk Name</label>
                 <input
+                  id="risk-name-input"
                   type="text"
                   required
                   placeholder="e.g. Unseasonal rain during outdoor lawn dinner"
@@ -187,8 +193,9 @@ export default function RiskShieldView({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Likelihood</label>
+                  <label htmlFor="risk-likelihood-select" className="block text-xs font-semibold text-soiree-muted mb-1">Likelihood</label>
                   <select
+                    id="risk-likelihood-select"
                     value={newLikelihood}
                     onChange={(e) => setNewLikelihood(e.target.value)}
                     className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -199,8 +206,9 @@ export default function RiskShieldView({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Impact</label>
+                  <label htmlFor="risk-impact-select" className="block text-xs font-semibold text-soiree-muted mb-1">Impact</label>
                   <select
+                    id="risk-impact-select"
                     value={newImpact}
                     onChange={(e) => setNewImpact(e.target.value)}
                     className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -213,8 +221,9 @@ export default function RiskShieldView({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Preventative Action (Weeks Before)</label>
+                <label htmlFor="risk-preventative-input" className="block text-xs font-semibold text-soiree-muted mb-1">Preventative Action (Weeks Before)</label>
                 <textarea
+                  id="risk-preventative-input"
                   rows={2}
                   required
                   placeholder="e.g. Pre-book adjacent covered banquet hall as backup"
@@ -225,8 +234,9 @@ export default function RiskShieldView({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Day-of Plan B Protocol</label>
+                <label htmlFor="risk-planb-input" className="block text-xs font-semibold text-soiree-muted mb-1">Day-of Plan B Protocol</label>
                 <textarea
+                  id="risk-planb-input"
                   rows={2}
                   required
                   placeholder="e.g. Coordinator calls move inside at 4 PM if radar shows rain"

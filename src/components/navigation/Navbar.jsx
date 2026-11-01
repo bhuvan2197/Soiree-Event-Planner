@@ -44,7 +44,7 @@ export default function Navbar({
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => onSelectEvent(null)}>
+          <button type="button" className="flex items-center gap-3.5 cursor-pointer" onClick={() => onSelectEvent(null)} aria-label="Go to Soirée home">
             <WaxSeal size={42} />
             <div>
               <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ export default function Navbar({
                 GenAI Celebration Architect
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Center: Event Selector (if event active) */}
           {currentEvent && (
@@ -145,9 +145,10 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onOpenPrint}
+                aria-label="Open printable event blueprint"
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-soiree-sand bg-soiree-cream hover:bg-soiree-sandLight text-soiree-burgundyDeep text-xs font-medium transition-all shadow-sm hover:border-soiree-burgundy/40"
               >
-                <Printer className="w-3.5 h-3.5 text-soiree-burgundy" />
+                <Printer className="w-3.5 h-3.5 text-soiree-burgundy" aria-hidden="true" />
                 <span>Blueprint</span>
               </button>
             )}
@@ -157,9 +158,10 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={handleShare}
+                aria-label={copied ? 'Event summary copied' : 'Copy event summary to clipboard'}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-soiree-sand bg-soiree-cream hover:bg-soiree-sandLight text-soiree-burgundyDeep text-xs font-medium transition-all shadow-sm"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-soiree-muted" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" /> : <Share2 className="w-3.5 h-3.5 text-soiree-muted" aria-hidden="true" />}
                 <span className="hidden xs:inline">{copied ? 'Copied' : 'Share'}</span>
               </button>
             )}
@@ -168,9 +170,10 @@ export default function Navbar({
             <button
               type="button"
               onClick={onNewEvent}
+              aria-label="Plan a new celebration"
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-soiree-burgundy hover:bg-soiree-burgundyDeep text-[#FAF5EC] text-xs font-medium shadow-sm transition-all hover:shadow hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">New Plan</span>
             </button>
           </div>

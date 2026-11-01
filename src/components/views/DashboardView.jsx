@@ -199,15 +199,17 @@ export default function DashboardView({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
         {/* Budget Card */}
-        <div 
+        <button 
+          type="button"
           onClick={() => onNavigateTab('budget')}
-          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group"
+          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group text-left"
+          aria-label={`Committed budget: ${event.currencySymbol}${totalSpent.toLocaleString()} of ${event.currencySymbol}${event.totalBudget.toLocaleString()}. Open budget view.`}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-soiree-muted">
               Committed Budget
             </span>
-            <div className="w-8 h-8 rounded-xl bg-soiree-rose/10 flex items-center justify-center text-soiree-burgundy">
+            <div className="w-8 h-8 rounded-xl bg-soiree-rose/10 flex items-center justify-center text-soiree-burgundy" aria-hidden="true">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
@@ -225,18 +227,20 @@ export default function DashboardView({
               style={{ width: `${Math.min(100, budgetRatio)}%` }}
             />
           </div>
-        </div>
+        </button>
 
         {/* Tasks Done Card */}
-        <div 
+        <button 
+          type="button"
           onClick={() => onNavigateTab('timeline')}
-          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group"
+          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group text-left"
+          aria-label={`Milestones: ${completedTasks} of ${totalTasks} done (${taskPercent}%). Open timeline view.`}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-soiree-muted">
               Milestones Done
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-800/10 flex items-center justify-center text-emerald-800">
+            <div className="w-8 h-8 rounded-xl bg-emerald-800/10 flex items-center justify-center text-emerald-800" aria-hidden="true">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
@@ -252,18 +256,20 @@ export default function DashboardView({
               style={{ width: `${taskPercent}%` }}
             />
           </div>
-        </div>
+        </button>
 
         {/* Vendors Booked Card */}
-        <div 
+        <button 
+          type="button"
           onClick={() => onNavigateTab('vendors')}
-          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group"
+          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group text-left"
+          aria-label={`${bookedVendors} vendors booked across ${event.vendors?.length || 0} categories. Open vendor view.`}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-soiree-muted">
               Vendors Booked
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-700/10 flex items-center justify-center text-amber-800">
+            <div className="w-8 h-8 rounded-xl bg-amber-700/10 flex items-center justify-center text-amber-800" aria-hidden="true">
               <Store className="w-4 h-4" />
             </div>
           </div>
@@ -275,20 +281,22 @@ export default function DashboardView({
           </p>
           <div className="flex items-center gap-1 text-[11px] text-soiree-rose font-medium mt-3">
             <span>Inquiry drafts ready</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </div>
-        </div>
+        </button>
 
         {/* Guests Confirmed Card */}
-        <div 
+        <button 
+          type="button"
           onClick={() => onNavigateTab('guests')}
-          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group"
+          className="bg-soiree-cream rounded-2xl border border-soiree-sand p-5 hover:border-soiree-burgundy/40 cursor-pointer transition-all hover:shadow-luxury group text-left"
+          aria-label={`${confirmedGuests} guests confirmed of ${event.guestCount} planned. Open guest view.`}
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-soiree-muted">
               Guests Confirmed
             </span>
-            <div className="w-8 h-8 rounded-xl bg-soiree-gold/15 flex items-center justify-center text-soiree-burgundyDeep">
+            <div className="w-8 h-8 rounded-xl bg-soiree-gold/15 flex items-center justify-center text-soiree-burgundyDeep" aria-hidden="true">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -299,10 +307,10 @@ export default function DashboardView({
             Targeting {event.guestCount} total party count
           </p>
           <div className="flex items-center gap-1 text-[11px] text-soiree-burgundy font-medium mt-3">
-            <span>Manage dietary & RSVPs</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            <span>Manage dietary &amp; RSVPs</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </div>
-        </div>
+        </button>
 
       </div>
 
@@ -344,9 +352,10 @@ export default function DashboardView({
                       type="button"
                       onClick={() => onToggleTask(task.id)}
                       className="w-5 h-5 rounded-md border border-soiree-burgundy/40 flex items-center justify-center hover:bg-soiree-burgundy/10 transition-colors"
-                      title="Mark as completed"
+                      aria-label={`Mark "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
+                      aria-pressed={task.completed}
                     >
-                      {task.completed && <Check className="w-3.5 h-3.5 text-soiree-burgundy" />}
+                      {task.completed && <Check className="w-3.5 h-3.5 text-soiree-burgundy" aria-hidden="true" />}
                     </button>
                     <div>
                       <p className="text-sm font-medium text-soiree-ink leading-snug">

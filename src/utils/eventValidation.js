@@ -16,11 +16,29 @@ export function sanitizeNumber(value, fallback = 0, min = 0, max = Number.MAX_SA
 }
 
 /**
- * Validates and safely parses an ISO date string (YYYY-MM-DD).
+ * Validates and safely parses an ISO date string (YYYY-MM-DD or standard ISO).
+ * Performs strict calendar checking so impossible dates like 2026-02-31 or 2026-99-99 are rejected.
  */
 export function isValidDateString(dateStr) {
   if (typeof dateStr !== 'string' || !dateStr.trim()) return false;
-  const parsed = new Date(dateStr);
+  const trimmed = dateStr.trim();
+  
+  // Strict check for YYYY-MM-DD format
+  const ymdMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (ymdMatch) {
+    const year = Number(ymdMatch[1]);
+    const month = Number(ymdMatch[2]);
+    const day = Number(ymdMatch[3]);
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2200) return false;
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return (
+      parsed.getUTCFullYear() === year &&
+      parsed.getUTCMonth() === month - 1 &&
+      parsed.getUTCDate() === day
+    );
+  }
+
+  const parsed = new Date(trimmed);
   return !Number.isNaN(parsed.getTime());
 }
 

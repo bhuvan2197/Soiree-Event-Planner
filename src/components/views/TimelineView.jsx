@@ -177,15 +177,21 @@ export default function TimelineView({
 
       {/* Add Task Modal */}
       {showAddTaskModal && (
-        <div className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up">
+        <div
+          className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-milestone-title"
+        >
           <div className="bg-soiree-cream rounded-3xl border border-soiree-sand p-6 max-w-md w-full shadow-luxury space-y-4">
-            <h3 className="font-serif text-xl font-bold text-soiree-burgundyDeep">
+            <h3 id="add-milestone-title" className="font-serif text-xl font-bold text-soiree-burgundyDeep">
               Add New Milestone
             </h3>
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Task Title</label>
+                <label htmlFor="task-title-input" className="block text-xs font-semibold text-soiree-muted mb-1">Task Title</label>
                 <input
+                  id="task-title-input"
                   type="text"
                   required
                   placeholder="e.g. Schedule final floral arch fitting"
@@ -197,8 +203,9 @@ export default function TimelineView({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Phase</label>
+                  <label htmlFor="task-phase-select" className="block text-xs font-semibold text-soiree-muted mb-1">Phase</label>
                   <select
+                    id="task-phase-select"
                     value={newTaskPhase}
                     onChange={(e) => setNewTaskPhase(e.target.value)}
                     className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -210,8 +217,9 @@ export default function TimelineView({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Priority</label>
+                  <label htmlFor="task-priority-select" className="block text-xs font-semibold text-soiree-muted mb-1">Priority</label>
                   <select
+                    id="task-priority-select"
                     value={newTaskPriority}
                     onChange={(e) => setNewTaskPriority(e.target.value)}
                     className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -225,8 +233,9 @@ export default function TimelineView({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Target Due Date</label>
+                  <label htmlFor="task-duedate-input" className="block text-xs font-semibold text-soiree-muted mb-1">Target Due Date</label>
                   <input
+                    id="task-duedate-input"
                     type="date"
                     value={newTaskDueDate}
                     onChange={(e) => setNewTaskDueDate(e.target.value)}
@@ -235,8 +244,9 @@ export default function TimelineView({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Assigned Owner</label>
+                  <label htmlFor="task-owner-input" className="block text-xs font-semibold text-soiree-muted mb-1">Assigned Owner</label>
                   <input
+                    id="task-owner-input"
                     type="text"
                     value={newTaskOwner}
                     onChange={(e) => setNewTaskOwner(e.target.value)}

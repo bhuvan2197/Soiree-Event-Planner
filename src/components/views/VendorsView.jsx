@@ -320,8 +320,9 @@ export default function VendorsView({
                             onClick={() => handleDeleteVendor(activeCategory.id, vendor.id)}
                             className="text-soiree-muted/40 hover:text-soiree-rose p-1 transition-colors"
                             title="Remove vendor"
+                            aria-label={`Remove vendor ${vendor.name}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       </div>
@@ -347,15 +348,21 @@ export default function VendorsView({
 
       {/* Add Vendor Modal */}
       {showAddVendorModal && (
-        <div className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up">
+        <div
+          className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-vendor-title"
+        >
           <div className="bg-soiree-cream rounded-3xl border border-soiree-sand p-6 max-w-md w-full shadow-luxury space-y-4">
-            <h3 className="font-serif text-xl font-bold text-soiree-burgundyDeep">
+            <h3 id="add-vendor-title" className="font-serif text-xl font-bold text-soiree-burgundyDeep">
               Add Vendor to {activeCategory?.category}
             </h3>
             <form onSubmit={handleSaveVendor} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Vendor / Studio Name</label>
+                <label htmlFor="vendor-name-input" className="block text-xs font-semibold text-soiree-muted mb-1">Vendor / Studio Name</label>
                 <input
+                  id="vendor-name-input"
                   type="text"
                   required
                   placeholder="e.g., Heritage Bloom Atelier"
@@ -367,8 +374,9 @@ export default function VendorsView({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Phone / Email</label>
+                  <label htmlFor="vendor-contact-input" className="block text-xs font-semibold text-soiree-muted mb-1">Phone / Email</label>
                   <input
+                    id="vendor-contact-input"
                     type="text"
                     placeholder="+91 ... or email"
                     value={vendorContact}
@@ -377,8 +385,9 @@ export default function VendorsView({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Status</label>
+                  <label htmlFor="vendor-status-select" className="block text-xs font-semibold text-soiree-muted mb-1">Status</label>
                   <select
+                    id="vendor-status-select"
                     value={vendorStatus}
                     onChange={(e) => setVendorStatus(e.target.value)}
                     className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -392,8 +401,9 @@ export default function VendorsView({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Quote ({event.currencySymbol})</label>
+                  <label htmlFor="vendor-quote-input" className="block text-xs font-semibold text-soiree-muted mb-1">Quote ({event.currencySymbol})</label>
                   <input
+                    id="vendor-quote-input"
                     type="number"
                     value={vendorQuote}
                     onChange={(e) => setVendorQuote(e.target.value)}
@@ -401,8 +411,9 @@ export default function VendorsView({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-soiree-muted mb-1">Advance Paid</label>
+                  <label htmlFor="vendor-advance-input" className="block text-xs font-semibold text-soiree-muted mb-1">Advance Paid</label>
                   <input
+                    id="vendor-advance-input"
                     type="number"
                     value={vendorAdvance}
                     onChange={(e) => setVendorAdvance(e.target.value)}
@@ -412,8 +423,9 @@ export default function VendorsView({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-soiree-muted mb-1">Notes / Scope details</label>
+                <label htmlFor="vendor-notes-input" className="block text-xs font-semibold text-soiree-muted mb-1">Notes / Scope details</label>
                 <input
+                  id="vendor-notes-input"
                   type="text"
                   placeholder="Includes 4 floral arches..."
                   value={vendorNotes}
@@ -444,14 +456,19 @@ export default function VendorsView({
 
       {/* AI Inquiry Message Modal */}
       {draftModalData && (
-        <div className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up">
+        <div
+          className="fixed inset-0 z-50 bg-soiree-burgundyDeep/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-up"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="draft-modal-title"
+        >
           <div className="bg-soiree-cream rounded-3xl border border-soiree-sand p-6 sm:p-8 max-w-2xl w-full shadow-luxury space-y-5">
             <div className="flex items-start justify-between">
               <div>
                 <Badge variant="gold" size="xs" className="mb-1">
                   Ready-to-Send Sourcing Message
                 </Badge>
-                <h3 className="font-serif text-xl font-bold text-soiree-burgundyDeep">
+                <h3 id="draft-modal-title" className="font-serif text-xl font-bold text-soiree-burgundyDeep">
                   Inquiry for {draftModalData.category}
                 </h3>
               </div>

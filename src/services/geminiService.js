@@ -1,5 +1,5 @@
 import { SAMPLE_EVENTS } from '../data/sampleEvents';
-import { normalizeAndValidateEvent, sanitizeNumber } from '../utils/eventValidation';
+import { normalizeAndValidateEvent, sanitizeNumber, isValidDateString } from '../utils/eventValidation';
 
 const STORAGE_KEY_API_KEY = 'soiree_gemini_api_key';
 const REQUEST_TIMEOUT_MS = 15000;
@@ -62,7 +62,7 @@ async function callGeminiApi(promptText, apiKey) {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Gemini API returned status ${response.status}`);
+        throw new Error(`Gemini service returned HTTP status ${response.status}`);
       }
 
       const data = await response.json();
@@ -74,9 +74,10 @@ async function callGeminiApi(promptText, apiKey) {
       return JSON.parse(cleaned);
     } catch (err) {
       clearTimeout(timeoutId);
-      lastError = err;
       const isTimeout = err.name === 'AbortError';
-      console.warn(`Attempt with ${model} failed (${isTimeout ? 'Request timed out' : 'Service unavailable'})`);
+      // Ensure error object doesn't carry sensitive details
+      lastError = new Error(isTimeout ? 'Gemini request timed out after 15 seconds' : 'Gemini service temporarily unavailable');
+      console.warn(`Attempt with ${model} failed: ${lastError.message}`);
     }
   }
 
@@ -91,32 +92,42 @@ export async function generatePlan(inputData) {
 
   if (apiKey) {
     try {
+      const safeDesc = typeof inputData.description === 'string' ? inputData.description.slice(0, 500).replace(/[\r\n]+/g, ' ') : 'Celebration';
+      const safeType = typeof inputData.eventType === 'string' ? inputData.eventType.slice(0, 50) : 'Celebration';
+      const safeCity = typeof inputData.city === 'string' ? inputData.city.slice(0, 80) : 'Local';
+      const safeDiet = typeof inputData.dietary === 'string' ? inputData.dietary.slice(0, 150) : 'Standard';
+      const safeNotes = typeof inputData.culturalNotes === 'string' ? inputData.culturalNotes.slice(0, 300) : 'None';
+      const safeGuests = sanitizeNumber(inputData.guestCount, 100, 1, 50000);
+      const safeBudget = sanitizeNumber(inputData.totalBudget, 500000, 100, 1000000000);
+      const safeCurrency = typeof inputData.currency === 'string' ? inputData.currency.slice(0, 5).toUpperCase() : 'USD';
+      const safeDate = isValidDateString(inputData.date) ? inputData.date : '2026-06-20';
+
       const prompt = `
 Generate a comprehensive, luxurious celebration plan based on this user input:
-- Event description: "${inputData.description || 'Celebration'}"
-- Event Type: ${inputData.eventType || 'Celebration'}
-- Estimated Guests: ${inputData.guestCount || 100}
-- Total Budget: ${inputData.totalBudget || 500000} ${inputData.currency || 'USD'}
-- City / Location: ${inputData.city || 'Local'}
-- Date: ${inputData.date || '2026-06-20'}
-- Vibe tags: ${(inputData.vibe || []).join(', ')}
-- Dietary preferences: "${inputData.dietary || 'Standard'}"
-- Cultural or religious notes: "${inputData.culturalNotes || 'None'}"
+- Event description: "${safeDesc}"
+- Event Type: ${safeType}
+- Estimated Guests: ${safeGuests}
+- Total Budget: ${safeBudget} ${safeCurrency}
+- City / Location: ${safeCity}
+- Date: ${safeDate}
+- Vibe tags: ${(inputData.vibe || []).slice(0, 8).join(', ')}
+- Dietary preferences: "${safeDiet}"
+- Cultural or religious notes: "${safeNotes}"
 
 Strict JSON output format:
 {
   "title": "Short poetic title (e.g. Mira's Tuscan Dusk Wedding)",
-  "eventType": "${inputData.eventType || 'Celebration'}",
+  "eventType": "${safeType}",
   "tagline": "Warm 1-2 sentence aesthetic concept",
-  "city": "${inputData.city || 'Local'}",
-  "date": "${inputData.date || '2026-06-20'}",
-  "guestCount": ${inputData.guestCount || 100},
-  "totalBudget": ${inputData.totalBudget || 500000},
-  "currency": "${inputData.currency || 'USD'}",
-  "currencySymbol": "${inputData.currency === 'INR' ? '₹' : '$'}",
-  "vibe": ${(inputData.vibe && inputData.vibe.length > 0) ? JSON.stringify(inputData.vibe) : '["Intimate", "Elegant"]'},
-  "dietary": "${inputData.dietary || 'None'}",
-  "culturalNotes": "${inputData.culturalNotes || 'None'}",
+  "city": "${safeCity}",
+  "date": "${safeDate}",
+  "guestCount": ${safeGuests},
+  "totalBudget": ${safeBudget},
+  "currency": "${safeCurrency}",
+  "currencySymbol": "${safeCurrency === 'INR' ? '₹' : (safeCurrency === 'EUR' ? '€' : (safeCurrency === 'GBP' ? '£' : '$'))}",
+  "vibe": ${(inputData.vibe && inputData.vibe.length > 0) ? JSON.stringify(inputData.vibe.slice(0, 8)) : '["Intimate", "Elegant"]'},
+  "dietary": "${safeDiet}",
+  "culturalNotes": "${safeNotes}",
   "readinessScore": 65,
   "budget": {
     "contingencyPercent": 8,
@@ -481,8 +492,9 @@ Return strict JSON array:
  */
 export async function chatUpdatePlan(currentPlan, userMessage, conversationHistory = []) {
   const apiKey = getStoredApiKey();
+  const safeMessage = typeof userMessage === 'string' ? userMessage.slice(0, 500) : '';
 
-  if (apiKey) {
+  if (apiKey && safeMessage) {
     try {
       const prompt = `
 You are Soirée's AI Co-Planner. You are in a conversational session with the event organizer.
@@ -492,10 +504,10 @@ Current Event Context:
 - Guests: ${currentPlan.guestCount}
 - Budget: ${currentPlan.totalBudget} ${currentPlan.currency}
 - Vibe: ${(currentPlan.vibe || []).join(', ')}
-- Categories: ${JSON.stringify(currentPlan.budget.categories.map(c => ({ id: c.id, name: c.name, planned: c.planned })))}
-- Recent Tasks: ${JSON.stringify(currentPlan.timeline.slice(0, 5).map(t => t.title))}
+- Categories: ${JSON.stringify(currentPlan.budget?.categories?.map(c => ({ id: c.id, name: c.name, planned: c.planned })) || [])}
+- Recent Tasks: ${JSON.stringify((currentPlan.timeline || []).slice(0, 5).map(t => t.title))}
 
-User request: "${userMessage}"
+User request: "${safeMessage}"
 
 You have the power to update parts of the plan in place if requested (e.g. adjust budget, add a task, change vibe, add an idea), or answer questions warmly with expert advice.
 Return strict JSON:

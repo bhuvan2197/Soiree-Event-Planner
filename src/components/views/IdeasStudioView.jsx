@@ -109,13 +109,16 @@ export default function IdeasStudioView({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-soiree-sand scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-soiree-sand scrollbar-none" role="tablist" aria-label="Ideas categories">
         {categories.map((cat) => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.id;
           return (
             <button
               key={cat.id}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`ideas-panel-${cat.id}`}
               onClick={() => setActiveCategory(cat.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                 isActive
@@ -123,7 +126,7 @@ export default function IdeasStudioView({
                   : 'bg-soiree-cream text-soiree-ink hover:bg-soiree-sand/40 border border-soiree-sand/60'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-soiree-rose'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-soiree-rose'}`} aria-hidden="true" />
               <span>{cat.label}</span>
             </button>
           );

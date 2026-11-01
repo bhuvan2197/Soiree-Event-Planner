@@ -33,7 +33,7 @@ export default function GuestsView({ event, onUpdateGuests }) {
   const declinedGuests = guests.filter(g => g.status === 'Declined').reduce((acc, g) => acc + (Number(g.partySize) || 1), 0);
 
   // Centralized catering impact metrics
-  const { costPerHead, committedSpend } = useMemo(() => calculateCateringMetrics(event), [event]);
+  const { costPerHead, committedSpend: committedCateringSpend } = useMemo(() => calculateCateringMetrics(event), [event]);
 
   const handleAddGuest = (e) => {
     e.preventDefault();
@@ -168,8 +168,9 @@ export default function GuestsView({ event, onUpdateGuests }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1">Guest / Family Name</label>
+              <label htmlFor="guest-name-input" className="block text-xs font-semibold text-soiree-muted mb-1">Guest / Family Name</label>
               <input
+                id="guest-name-input"
                 type="text"
                 required
                 placeholder="e.g. Elena Rostova & Guest"
@@ -180,8 +181,9 @@ export default function GuestsView({ event, onUpdateGuests }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1">Party Size (Seats)</label>
+              <label htmlFor="guest-partysize-input" className="block text-xs font-semibold text-soiree-muted mb-1">Party Size (Seats)</label>
               <input
+                id="guest-partysize-input"
                 type="number"
                 min="1"
                 max="10"
@@ -192,8 +194,9 @@ export default function GuestsView({ event, onUpdateGuests }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1">Group Affiliation</label>
+              <label htmlFor="guest-group-select" className="block text-xs font-semibold text-soiree-muted mb-1">Group Affiliation</label>
               <select
+                id="guest-group-select"
                 value={guestGroup}
                 onChange={(e) => setGuestGroup(e.target.value)}
                 className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
@@ -206,8 +209,9 @@ export default function GuestsView({ event, onUpdateGuests }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1">Dietary Restriction</label>
+              <label htmlFor="guest-dietary-input" className="block text-xs font-semibold text-soiree-muted mb-1">Dietary Restriction</label>
               <input
+                id="guest-dietary-input"
                 type="text"
                 placeholder="e.g. Jain, Vegan, Nut-free"
                 value={guestDietary}
@@ -217,8 +221,9 @@ export default function GuestsView({ event, onUpdateGuests }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-soiree-muted mb-1">RSVP Status</label>
+              <label htmlFor="guest-status-select" className="block text-xs font-semibold text-soiree-muted mb-1">RSVP Status</label>
               <select
+                id="guest-status-select"
                 value={guestStatus}
                 onChange={(e) => setGuestStatus(e.target.value)}
                 className="w-full rounded-xl border border-soiree-sand bg-white p-2 text-xs outline-none focus:border-soiree-burgundy font-medium"
